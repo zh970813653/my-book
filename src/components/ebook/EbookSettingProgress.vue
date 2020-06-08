@@ -1,0 +1,172 @@
+<template>
+  <fade-slider-up>
+    <div class="setting-wrapper" v-show="menuVisible&&settingVisible===2">
+      <div class="setting-progress">
+        <div class="read-time-wrapper">
+          <span class="read-time-text">{{getReadTimeText()}}</span>
+          <span class="icon-forward"></span>
+        </div>
+        <div class="progress-wrapper">
+          <div class="progress-icon-wrapper">
+            <span class="icon-back" @click="prevSection()"></span>
+          </div>
+          <input
+            class="progress"
+            type="range"
+            max="100"
+            min="0"
+            step="1"
+            @change="onProgressChange($event.target.value)"
+            @input="onProgressInput($event.target.value)"
+            :value="progress"
+            :disabled="!bookAvailable"
+            ref="progress"
+          />
+          <div class="progress-icon-wrapper">
+            <span class="icon-forward" @click="nextSection()"></span>
+          </div>
+        </div>
+        <div class="text-wrapper">
+          <span class="progress-section-text">{{getSectionName}}</span>
+          <span>({{bookAvailable ? progress + '%' : '加载中...'}})</span>
+        </div>
+      </div>
+    </div>
+  </fade-slider-up>
+</template>
+
+<script>
+import { ebookMixins } from '@/utils/mixins'
+
+export default {
+  mixins: [ebookMixins],
+  data () {
+    return {}
+  },
+  methods: {
+    // 当进度条拖动,松手之后的调用方法
+    onProgressChange (progress) {
+      this.setProgress(progress).then(() => {
+        this.displayProgress()
+      })
+    },
+    // 拖动过程中调用的方法
+    onProgressInput (progress) {
+      this.setProgress(progress).then(() => {
+        this.updataProgressBg()
+      })
+    },
+    displayProgress () {
+      // 获取定位数据
+      const cfi = this.currentBook.locations.cfiFromPercentage(
+        this.progress / 100
+      )
+      console.log(cfi)
+      this.display(cfi)
+      this.currentBook.rendition.display(cfi).then(() => {
+        this.refreshLocation()
+      })
+    },
+    updataProgressBg () {
+      this.$refs.progress.style.backgroundSize = `${this.progress}% 100%`
+    },
+    prevSection () {
+      if (this.section > 0 && this.bookAvailable) {
+        this.setSection(this.section - 1).then(() => {
+          this.displaySection()
+        })
+      }
+    },
+    nextSection () {
+      if (
+        this.section < this.currentBook.spine.length - 1 &&
+        this.bookAvailable
+      ) {
+        this.setSection(this.section + 1).then(() => {
+          this.displaySection()
+        })
+      }
+    },
+    displaySection () {
+      const sectionInfo = this.currentBook.section(this.section)
+      if (sectionInfo && sectionInfo.href) {
+        this.display(sectionInfo.href)
+      }
+    }
+  },
+  updated () {
+    this.$refs.progress.style.backgroundSize = `${this.progress}% 100%`
+  }
+}
+</script>
+
+<style lang='scss' scoped>
+@import "../../assets/styles/global.scss";
+.setting-wrapper {
+  position: absolute;
+  bottom: rem(48);
+  left: 0;
+  z-index: 101;
+  width: 100%;
+  height: rem(90);
+  background: white;
+  box-shadow: 0 rem(-8) rem(8) rgba(0, 0, 0, 0.15);
+  .setting-progress {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    .read-time-wrapper {
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: rem(40);
+      font-size: rem(12);
+      @include center;
+    }
+    .progress-wrapper {
+      width: 100%;
+      height: 100%;
+      @include center;
+      padding: 0 rem(15);
+      box-sizing: border-box;
+      .progress-icon-wrapper {
+        font-size: rem(20);
+      }
+      .progress {
+        width: 100%;
+        -webkit-appearance: none;
+        height: rem(2);
+        margin: 0 rem(15);
+        &:focus {
+          outline: none;
+        }
+        &::-webkit-slider-thumb {
+          -webkit-appearance: none;
+          height: rem(20);
+          width: rem(20);
+          border-radius: 50%;
+          background: white;
+          box-shadow: 0 4px 4px 0 rgba(0, 0, 0, 0.15);
+          border: rem(1) solid #ddd;
+        }
+      }
+    }
+    .text-wrapper {
+      position: absolute;
+      left: 0;
+      bottom: rem(10);
+      width: 100%;
+      color: #333;
+      font-size: rem(12);
+      text-align: center;
+      padding: 0 rem(15);
+      box-sizing: border-box;
+      @include center;
+      .progress-section-text {
+        @include ellipsis;
+      }
+    }
+  }
+}
+</style>
