@@ -12,7 +12,7 @@
     "better-scroll": "^1.15.2",
     "core-js": "^3.6.4",
     "epubjs": "^0.3.85",
-    "node-sass": "^4.14.0",
+    "node-sass": "^7.0.0",
     "vue": "^2.6.11",
     "vue-i18n": "^8.17.5",
     "vue-router": "^3.1.6",
